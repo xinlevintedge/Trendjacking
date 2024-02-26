@@ -2,7 +2,7 @@ name: Daily Automation
 
 on:
   schedule:
-    - cron: '50 9 * * *'
+    - cron: '35 9 * * *'
     #- cron: '0 0 * * *'  # Schedule to run every day at 12:00 AM
 
 jobs:
