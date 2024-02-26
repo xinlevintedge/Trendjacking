@@ -1,8 +1,13 @@
+from bs4 import BeautifulSoup
+import requests
+import pandas as pd
+import pygsheets
+from oauth2client.service_account import ServiceAccountCredentials
+import gspread
+import json
+import os
+
 # YOUTUBE TRENDING VIDEOS  ----------------------------------------------------------------------------
-
-# URL of the website to scrape
-url = "https://yttrendz.com/youtube-trends/singapore"
-
 
 # URL of the website to scrape
 url = "https://yttrendz.com/youtube-trends/singapore"
