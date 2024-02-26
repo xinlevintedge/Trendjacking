@@ -106,23 +106,41 @@ instareel_url = "https://slayingsocial.com/instagram-reels-trends/  "
 
 # Send a GET request to the URL
 try:
-    response = requests.get(insta_url)
+    response = requests.get(instareel_url)
     response.raise_for_status()  # Raise an exception for non-200 status codes
     soup = BeautifulSoup(response.content, "html.parser")
 
     # Find the elements containing insta reels
-    rank_elements = soup.select("p+ p")
-    hashtag_elements = soup.select(".font-bold.border-accent")
-
+    title_elements = soup.select("p+ p")
+   
     # Extract text from elements
-    ranks = [rank.get_text(strip=True) for rank in rank_elements]
-    hashtag = [hashtag.get_text(strip=True) for hashtag in hashtag_elements]
+    titles = [title.get_text(strip=True) for title in title_elements]
 
-    # Combine data into a DataFrame
-    insta_data = pd.DataFrame({"Rank": ranks, "Hashtags": hashtag})
+    # Initialize lists to store title and description separately
+    titles_cleaned = []
+    descriptions = []
+
+    # Process each title
+    for title in titles:
+        if "Example" in title:  # Check if title contains the word "Example"
+            segments = title.split("|")
+            title_part = segments[0].strip()
+            # Remove "Trend" and "*" from title_part
+            title_part = title_part.replace("Trend", "").replace("*", "").strip()
+            titles_cleaned.append(title_part)
+            description_part = ""
+            if len(segments) > 1:
+                description_part = segments[1].strip()
+                description_part = description_part.replace("Example:", "").strip()
+            descriptions.append(description_part)
+
+    # Create a DataFrame with title and description
+    instareel_data = pd.DataFrame({"Title": titles_cleaned, "Description": descriptions})
+
 
     # Display the first few rows of the data
-    print(insta_data.head(10))
+    print(instareel_data.head(10))
+    
 except requests.exceptions.RequestException as e:
     print(f"Failed to retrieve the webpage: {e}")
     
