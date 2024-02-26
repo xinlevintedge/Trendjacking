@@ -1,0 +1,32 @@
+name: Daily Automation
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # Schedule to run every day at 12:00 AM
+
+jobs:
+  automate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+
+      - name: Install Dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run Automation Script
+        run: python your_script.py  # Replace with the name of your Python script
+
+      - name: Commit Changes
+        run: |
+          git config --global user.email "you@example.com"
+          git config --global user.name "Your Name"
+          git add .
+          git commit -m "Automated data update"
+          git push
