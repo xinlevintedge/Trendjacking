@@ -189,6 +189,14 @@ chrome_options.add_argument("--disable-dev-shm-usage")
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(url)
 
+driver.save_screenshot('screenshot.png')
+print("Current URL:", driver.current_url)
+print("Page Title:", driver.title)
+
+# Check if the "View More" button is found
+view_more_button = driver.find_element(By.XPATH, "//div[contains(@class, 'CcButton_common__aFDas') and contains(@class, 'CcButton_secondary__N1HnA') and contains(@class, 'index-mobile_common__E86XM')]")
+print("Is View More button found?", view_more_button is not None)
+
 # Click the "View More" button
 for _ in range(20):
     view_more_button = driver.find_element(By.XPATH, "//div[contains(@class, 'CcButton_common__aFDas') and contains(@class, 'CcButton_secondary__N1HnA') and contains(@class, 'index-mobile_common__E86XM')]")
