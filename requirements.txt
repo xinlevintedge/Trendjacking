@@ -1,6 +1,7 @@
-beautifulsoup4
-requests
 pandas
-oauth2client
-gspread
+requests
+beautifulsoup4
+openpyxl
 pygsheets
+gspread
+oauth2client
