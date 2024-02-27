@@ -193,7 +193,7 @@ driver.save_screenshot('screenshot.png')
 print("Current URL:", driver.current_url)
 print("Page Title:", driver.title)
 
-# Check if the "View More" button is found
+'''# Check if the "View More" button is found
 view_more_button = driver.find_element(By.XPATH, "//div[contains(@class, 'CcButton_common__aFDas') and contains(@class, 'CcButton_secondary__N1HnA') and contains(@class, 'index-mobile_common__E86XM')]")
 print("Is View More button found?", view_more_button is not None)
 
@@ -202,13 +202,11 @@ for _ in range(20):
     view_more_button = driver.find_element(By.XPATH, "//div[contains(@class, 'CcButton_common__aFDas') and contains(@class, 'CcButton_secondary__N1HnA') and contains(@class, 'index-mobile_common__E86XM')]")
     view_more_button.click()  # Click the "View More" button
     # Wait for the page to load the newly loaded content
-    WebDriverWait(driver, 10).until(EC.invisibility_of_element_located((By.XPATH, "//div[@class='LoadingIndicator_text__29MyQ']")))
+    WebDriverWait(driver, 10).until(EC.invisibility_of_element_located((By.XPATH, "//div[@class='LoadingIndicator_text__29MyQ']")))'''
 
 
-# Find all the ranking elements
+# Find all elements
 rank_elements = driver.find_elements(By.CLASS_NAME, "RankingStatus_rankingIndex__ZMDrH")
-
-# Find all the hashtag elements
 hashtag_elements = driver.find_elements(By.CLASS_NAME, "CardPc_titleText__RYOWo")
 
 # Create a list to store the data
@@ -217,8 +215,6 @@ tikok = []
 # Iterate through all elements and store ranks and hashtags in the list
 for rank, hashtag in zip(rank_elements, hashtag_elements):
     tikok.append({"Rank": rank.text.strip(), "Hashtag": hashtag.text.strip()})
-
-
 tikok_data = pd.DataFrame(tikok)
 print(tikok_data)
 
