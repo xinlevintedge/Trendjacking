@@ -1,7 +1,9 @@
 pandas
 requests
 beautifulsoup4
+pytrends
 openpyxl
 pygsheets
 gspread
 oauth2client
+selenium
