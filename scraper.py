@@ -8,7 +8,7 @@ import json
 import os
 from datetime import datetime
 
-# YOUTUBE TRENDING VIDEOS  ----------------------------------------------------------------------------
+'''# YOUTUBE TRENDING VIDEOS  ----------------------------------------------------------------------------
 
 # URL of the website to scrape
 url = "https://yttrendz.com/youtube-trends/singapore"
@@ -226,13 +226,15 @@ for title in titles:
 
 # Create a DataFrame with title and description
 tiktok_data = pd.DataFrame({"Title": titles_list , "Description": descriptions, "Date": date})
-print(tiktok_data)
+print(tiktok_data)'''
 
     
 # UPDATING TO GOOGLE SHEETS ----------------------------------------------------------------------------
 
 # Load Google Sheets credentials from the secret
 secret_value = os.environ.get('GOOGLE_SHEETS_CREDS')
+secret_value = os.environ.get('GOOGLE_SHEETS_CREDS')
+print(type(secret_value))  # Just to debug, remove or comment out in production!
 creds_dict = json.loads(secret_value)
 creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict)
 
