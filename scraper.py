@@ -5,6 +5,7 @@ import pygsheets
 from oauth2client.service_account import ServiceAccountCredentials
 import gspread
 import json
+import os
 from datetime import datetime
 
 # YOUTUBE TRENDING VIDEOS  ----------------------------------------------------------------------------
