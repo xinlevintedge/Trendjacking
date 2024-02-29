@@ -5,7 +5,7 @@ import pygsheets
 from oauth2client.service_account import ServiceAccountCredentials
 import gspread
 import json
-import os
+from datetime import datetime
 
 # YOUTUBE TRENDING VIDEOS  ----------------------------------------------------------------------------
 
@@ -22,10 +22,17 @@ soup = BeautifulSoup(response.content, "html.parser")
 rank_elements = soup.select(".feed-count span")
 topic_elements = soup.select(".feed-title .videoPopup-open")
 author_elements = soup.select(".feed-author")
+view_elements = soup.select("li:nth-child(1) .feed-view-figure")
+like_elements = soup.select("li:nth-child(2) .feed-view-figure")
+comment_elements = soup.select("li~ li+ li .feed-view-figure")
+
 
 # Extract text from elements
 ranks = [rank.get_text(strip=True) for rank in rank_elements]
 topics = [topic.get_text(strip=True) for topic in topic_elements]
+views = [view.get_text(strip=True) for view in view_elements]
+likes = [like.get_text(strip=True) for like in like_elements]
+comments = [comment.get_text(strip=True) for comment in comment_elements]
 
 
 # Extract authors and remove rows containing "Upload by:"
@@ -37,7 +44,7 @@ for author in author_elements:
  
 
 # Combine data into a DataFrame
-yt_data = pd.DataFrame({"Rank": ranks, "Topic": topics, "YouTuber": authors})
+yt_data = pd.DataFrame({"Rank": ranks, "Topic": topics, "YouTuber": authors, "Views": views,"Likes": likes,"Comments": comments})
 
 # Display the DataFrame
 print(yt_data)
@@ -60,13 +67,16 @@ if response.status_code == 200:
     # Find the elements containing Twitter ranks and topics
     rank_elements = soup.select("#copyData th:nth-child(1)")
     topic_elements = soup.select(".tweet")
+    tweet_volume_elements = soup.select("#copyData .sml")
+    
 
     # Extract text from elements
     ranks = [rank.get_text(strip=True) for rank in rank_elements]
     topics = [topic.get_text(strip=True) for topic in topic_elements]
+    tweet_volume = [tweet_volume.get_text(strip=True) for tweet_volume in tweet_volume_elements]
 
     # Combine data into a DataFrame
-    twitter_data = pd.DataFrame({"Rank": ranks, "Hashtags/Topics": topics})
+    twitter_data = pd.DataFrame({"Rank": ranks, "Hashtags/Topics": topics, "Tweet Volume": tweet_volume})
 
     # Display the first few rows of the data
     print(twitter_data.head(10))
@@ -116,10 +126,9 @@ try:
     # Extract text from elements
     titles = [title.get_text(strip=True) for title in title_elements]
 
-    # Initialize lists to store title and description separately
+
     titles_cleaned = []
     descriptions = []
-
     # Process each title
     for title in titles:
         if "Example" in title:  # Check if title contains the word "Example"
@@ -158,68 +167,65 @@ google_data = pytrends.trending_searches(pn='singapore')
 
 # Get the current date
 current_date = date.today().strftime("%Y-%m-%d")
-
-# Add the date as a new column to the datafram
 google_data['Date'] = current_date
+
+google_data = google_data.rename(columns={google_data.columns[0]: "Trends"})
 
 # Show only the first 10 rows of the dataframe
 print(google_data)
 
+# TIKTOK TRENDS  ----------------------------------------------------------------------------
+ 
+tiktok_url = "https://slayingsocial.com/tiktok-trends-right-now/"
 
-# TIKTOK TRENDS ----------------------------------------------------------------------------
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.chrome.options import Options
+# Send a GET request to the URL
+response = requests.get(tiktok_url)
+response.raise_for_status()  # Raise an exception for non-200 status codes
+soup = BeautifulSoup(response.content, "html.parser")
 
+# Find the elements containing insta reels
+elements = soup.select("p+ p")
+   
+# Extract text from elements
+titles = [title.get_text(strip=True) for title in elements]
 
-# URL of the website to scrape
-url = "https://ads.tiktok.com/business/creativecenter/inspiration/popular/hashtag/pc/en?rid=9oca3166fgo&region=SG&period=7&orderBy=popular"
+titles_list = []
+descriptions = []
+date = []
 
-# Setup Chrome options
-chrome_options = Options()
-chrome_options.add_argument("--headless")  # Ensure GUI is off
-chrome_options.add_argument("--no-sandbox")
-chrome_options.add_argument("--disable-dev-shm-usage")
+# Process each title
+for title in titles:
+    if "Example" in title:  # Check if title contains the word "Example"
+        segments = title.split("|")
+        title_part = segments[0].strip()
+        # Remove "Trend" and "*" from title_part
+        title_part = title_part.replace("Trend", "").replace("*", "").strip()
+        # Split the title_part by ")"
+        title_segments = title_part.split(")")
+        # Ensure that there is a part after the split and it's not empty
+        if len(title_segments) > 1 and title_segments[1].strip():
+            date_part_raw = title_segments[0].strip("(Added")
+            # Parse the date
+            # Parse the date, ensuring to strip any leading/trailing whitespace
+            date_object = datetime.strptime(date_part_raw.strip(), "%B %d, %Y")
+            # Convert the date to the desired format
+            date_formatted = date_object.strftime("%Y-%m-%d")
+            title_cleaned = title_segments[1].strip()
+            # Append to respective lists
+            date.append(date_formatted)
+            titles_list.append(title_cleaned)
+            description_part = ""
+            if len(segments) > 1:
+                description_part = segments[1].strip()
+                description_part = description_part.replace("Example:", "").strip()
+                descriptions.append(description_part)
+        # If the condition is not met, continue to the next iteration without appending
+        else:
+            continue
 
-# Set path to chromedriver as per GitHub Actions setup
-# No need to specify a path explicitly, GitHub Actions will have chromedriver in PATH
-driver = webdriver.Chrome(options=chrome_options)
-driver.get(url)
-
-driver.save_screenshot('screenshot.png')
-print("Current URL:", driver.current_url)
-print("Page Title:", driver.title)
-
-'''# Check if the "View More" button is found
-view_more_button = driver.find_element(By.XPATH, "//div[contains(@class, 'CcButton_common__aFDas') and contains(@class, 'CcButton_secondary__N1HnA') and contains(@class, 'index-mobile_common__E86XM')]")
-print("Is View More button found?", view_more_button is not None)
-
-# Click the "View More" button
-for _ in range(20):
-    view_more_button = driver.find_element(By.XPATH, "//div[contains(@class, 'CcButton_common__aFDas') and contains(@class, 'CcButton_secondary__N1HnA') and contains(@class, 'index-mobile_common__E86XM')]")
-    view_more_button.click()  # Click the "View More" button
-    # Wait for the page to load the newly loaded content
-    WebDriverWait(driver, 10).until(EC.invisibility_of_element_located((By.XPATH, "//div[@class='LoadingIndicator_text__29MyQ']")))'''
-
-
-# Find all elements
-rank_elements = driver.find_elements(By.CLASS_NAME, "RankingStatus_rankingIndex__ZMDrH")
-hashtag_elements = driver.find_elements(By.CLASS_NAME, "CardPc_titleText__RYOWo")
-
-# Create a list to store the data
-tikok = []
-
-# Iterate through all elements and store ranks and hashtags in the list
-for rank, hashtag in zip(rank_elements, hashtag_elements):
-    tikok.append({"Rank": rank.text.strip(), "Hashtag": hashtag.text.strip()})
-tikok_data = pd.DataFrame(tikok)
-print(tikok_data)
-
-# Close the browser
-driver.quit()
+# Create a DataFrame with title and description
+tiktok_data = pd.DataFrame({"Title": titles_list , "Description": descriptions, "Date": date})
+print(tiktok_data)
 
     
 # UPDATING TO GOOGLE SHEETS ----------------------------------------------------------------------------
@@ -260,6 +266,6 @@ def update_sheet(worksheet_title, df, include_header=False):
 # Update Google Sheets with the collected data
 update_sheet('YouTube', yt_data, include_header=True)
 update_sheet('Twitter', twitter_data, include_header=True)
-update_sheet('Instagram', insta_data, include_header=True)
+update_sheet('Instagram', instareel_data, include_header=True)
 update_sheet('Google Trends', google_data, include_header=True)
-update_sheet('TikTok', tikok_data, include_header=True)
+update_sheet('TikTok Trends', tiktok_data, include_header=True)
