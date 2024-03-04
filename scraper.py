@@ -8,7 +8,7 @@ import json
 import os
 from datetime import datetime
 
-'''# YOUTUBE TRENDING VIDEOS  ----------------------------------------------------------------------------
+# YOUTUBE TRENDING VIDEOS  ----------------------------------------------------------------------------
 
 # URL of the website to scrape
 url = "https://yttrendz.com/youtube-trends/singapore"
@@ -226,7 +226,7 @@ for title in titles:
 
 # Create a DataFrame with title and description
 tiktok_data = pd.DataFrame({"Title": titles_list , "Description": descriptions, "Date": date})
-print(tiktok_data)'''
+print(tiktok_data)
 
     
 # UPDATING TO GOOGLE SHEETS ----------------------------------------------------------------------------
