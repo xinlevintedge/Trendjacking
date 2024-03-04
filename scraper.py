@@ -233,7 +233,7 @@ print(tiktok_data)'''
 
 # Load Google Sheets credentials from the secret
 secret_value = os.environ.get('GOOGLE_SHEETS_CREDS')
-print(type(secret_value))  # Just to debug, remove or comment out in production!
+print(secret_value)  # Just to debug, remove or comment out in production!
 creds_dict = json.loads(secret_value)
 creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict)
 
