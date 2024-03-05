@@ -232,18 +232,8 @@ print(tiktok_data)
 # UPDATING TO GOOGLE SHEETS ----------------------------------------------------------------------------
 
 # Load Google Sheets credentials from the secret
-#secret_value = os.environ.get('GOOGLE_SHEETS_CREDS')
-#print(secret_value)  # Just to debug, remove or comment out in production!
-secret_value = r"""
-{
-  "type": "service_account",
-  "project_id": "master-tangent-415102",
-  "private_key_id": "3c7bd110b6b3a648e6e40b05885d3fc46a641225",
-  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDDBWmKXB9IEZH9\n5VHMbUETuBmB1wmY8fGmO+MfdqB3AapGn7Nzy8ofmrJ9+Yjb3UM+9sHmLA1ZIK33\nZZYp6QcRbGKO/YVUlJZgkSbaxBboPc6XWeYengyzjHsK65TWTSQ7t2CuBbuqwvSN\niKBFSmsr23WWr766LxYxlg+zUpgDClAdue4Pz0YR/XejmMdtO2bs2Vl3vyU2eiXc\nIfa1C76K9EOFVZXjy3ZO9NccHotIGgB+fimyPfI9TvrozhrVBZMbHMBmJwFartw8\niMpRI/THt67oaWBCO+kQjq/CI+35NHyBQg3ZZIxY38d1TOA8GN+7LEyqpQsI7rXY\nsWpUspSvAgMBAAECggEAM1VA3xD5kOxDC9wpSFB3wTuDx0f1eEMzEskPsw/0E+8l\nxVozD6dUKDZ9hihBLHJUyYWFK1NsHgo6kHS2boiuehkX5kB4MHe+D2QVoJ7d0rq2\nHuOkbWm3uSkgmBLDhhcfEvLlaVkL+VpAqeKNIUAB7rThAk13PCW5x0qTDmYOqjm+\na2bbIGXvBoWsge6jKnUc7iPelP4Dyqhi6z5VmuzLs7kVlgxVOETt06keaDgeuHoV\nUgKVLtm6CB285pT5jPdb9bL7OyZHpfCyHrt2fsDAJ8zJ5xy5JuJMvu2MSRiF7IMN\nRqJFdoHb95cVCpj6pjcSpHxwnCe+glJ9pUhSAvA61QKBgQDrfe+oYpFxSheTaacw\nbFNNiYBGNkjesljQx0HRqc3DZkfZko5JE8ewIHS7VJBWc0K7eMmriaMXMDHIUtYb\n+qRAmgBnlO6bzGrSKq8VpRqnNAR/H3QKh+7n8sLng8Cq2Xtq1pyT61vC+/7Zd9LM\niGNDRsLPza2pJOQwNpSBgbkJowKBgQDUATgS8wbEl0V0RzGdwSCANjMj97/iw/hK\ncHFlGPpnjsTWDo97dgd/YqgtCJl2qS8gVgdfRvoDMFF8kvVBa16o2dN16NDjwMqY\nFWdFHYuE7/grB7r1DMxDnoASb1VZac4o9n5iyjZ8uLsjIzFbR9NeJcIPTAKKLGMH\ndU+fDqxRhQKBgFgMpmcXM7pgMaB0iIaaeisrlkKqWWSq2np1hi6WhtDglUzMd1br\nhmZcPEkuvSkVv4XJC96Pf+NTqcl074lWlcNx0WTpUq3+KJKcUwqMyQJreKLvZ7vo\nR3OCWU2m/Yrj9jlkNPc5sP2eqxM0siS3eiXVd1GrXZs4p/k+7xfdIQpxAoGBALz5\nwTQS8Wt3s+9sLqwCJKhkp71d7+uA5+fixxFo7Hw25PoxzHAuy4wfMu3BhpohQOLA\nDJ4/NEh3X4t9q6R+wsgcMsQdnWYGyhA6s+0F4wHCriIdJ+ebWtDDjkHgf+HN0Hjv\nD8WbnmoaeKVfj3VgVubLHWppRLJJ0pQpW6naeHvJAoGBAKyQsYndVldf/PJrAMjy\n6h9T6KQM3nVDCex2H0J1pAR1Jil7fw8nC20MTKfYggEWsl+Qcnb2fxjItuWfuKOo\n6F90X1Lhpnib9powkz3RlJ6G7lJ42cEAUpEZJ3tSujfI02EnWH6uUibgWWzQK72W\nxzM+60V+JxhqiBvmTil3mIgK\n-----END PRIVATE KEY-----\n",
-  "client_email": "xin-550@master-tangent-415102.iam.gserviceaccount.com",
-  "client_id": "115346889995173445539"
-}
-"""
+secret_value = os.environ.get('GOOGLE_SHEETS_CREDS')
+
 creds_dict = json.loads(secret_value)
 creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict)
 
