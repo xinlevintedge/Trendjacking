@@ -7,4 +7,3 @@ pygsheets
 gspread
 oauth2client
 selenium
-re
