@@ -67,7 +67,7 @@ while True:
             EC.invisibility_of_element_located((By.XPATH, "//div[@class='LoadingIndicator_text__29MyQ']"))
         )
     except Exception as e:
-        break  # Exit the loop if the button is not found or any error occur
+        break  # Exit the loop if the button is not found or any error occurs
     
 # Find all the  elements
 rank_elements = driver.find_elements(By.CLASS_NAME, "index-mobile_rankingIndex__9mXja")
