@@ -32,7 +32,85 @@ sh = client.open_by_url('https://docs.google.com/spreadsheets/d/1EgrVNuuFs_XxHsk
 # Get the previos date and format it as "YYYY-MM-DD"
 previous_date = (date.today() - timedelta(days=1)).strftime("%Y-%m-%d")
 
-# YOUTUBE TRENDING VIDEOS  ----------------------------------------------------------------------------
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.chrome.options import Options
+
+# Path to your chromedriver executable
+CHROMEDRIVER_PATH = "C:\\Users\\XINLE\\Downloads\\chromedriver-win64\\chromedriver-win64\\chromedriver.exe"
+
+# URL of the website to scrape
+url = "https://ads.tiktok.com/business/creativecenter/inspiration/popular/hashtag/pc/en"
+
+# Set up Chrome webdriver 
+chrome_options = Options()
+chrome_options.add_argument("--headless")  # Run in headless mode
+chrome_options.add_argument("--no-sandbox")  # Required for running as root in Docker
+chrome_options.add_argument("--disable-dev-shm-usage")  # Required for running in Docker
+chrome_options.add_argument("--start-maximized")  # Maximize the window (optional)
+driver = webdriver.Chrome(options=chrome_options)
+driver.get(url)
+
+while True:
+    try:
+        # Attempt to find the "View More" button
+        view_more_button = WebDriverWait(driver, 10).until(
+            EC.visibility_of_element_located((By.XPATH, '//*[@id="ccContentContainer"]/div[3]/div/div[2]/div/div[1]/div'))
+        )
+        # Click the "View More" button if it is visible
+        view_more_button.click()
+        # Wait for the page to load the newly loaded content
+        WebDriverWait(driver, 10).until(
+            EC.invisibility_of_element_located((By.XPATH, "//div[@class='LoadingIndicator_text__29MyQ']"))
+        )
+    except Exception as e:
+        break  # Exit the loop if the button is not found or any error occur
+    
+# Find all the  elements
+rank_elements = driver.find_elements(By.CLASS_NAME, "index-mobile_rankingIndex__9mXja")
+hashtag_elements = driver.find_elements(By.CLASS_NAME, "CardPc_titleText__RYOWo")
+rankchange_elements = driver.find_elements(By.CLASS_NAME, "index-mobile_rankingvalue__LMuXc")
+postview_elements = driver.find_elements(By.CLASS_NAME, "CardPc_itemValue__XGDmG")
+# Collect data into lists
+ranks = [rank.text.strip() for rank in rank_elements]
+hashtags = [hashtag.text.strip() for hashtag in hashtag_elements]
+postsviews = [postview.text.strip() for postview in postview_elements]
+posts = postsviews[0::2]  # Get every other element, starting from the first
+views = postsviews[1::2]  # Get every other element, starting from the second
+
+
+rankchange = []
+# Loop through each element to check its content
+for element in rankchange_elements:
+    try:
+        text = element.text.strip()
+        if text and text.isdigit():
+            arrow_up_element = element.find_elements(By.XPATH, ".//span[@class='i-icon i-icon-arrow-up']")
+            arrow_down_element = element.find_elements(By.XPATH, ".//span[@class='i-icon i-icon-arrow-down']")
+            if arrow_up_element:
+                rankchange.append("+" + text)  # Append "+" if the rank is rising
+            elif arrow_down_element:
+                rankchange.append("-" + text)  # Append "-" if the rank is falling
+            else:
+                rankchange.append(text)
+        else:
+            src = element.get_attribute('src')
+            if src:
+                rankchange.append("NEW")  # Assuming images are indicators for "NEW".
+            else:
+                rankchange.append("-")
+    except Exception as e:
+        rankchange.append("-")
+
+# Create DataFrame
+tiktok_hashtag = pd.DataFrame({"Rank": ranks, "Hashtag": hashtags, "Rank Change": rankchange,"Posts": posts,"Views": views})
+tiktok_hashtag['Date'] = previous_date
+driver.quit()
+
+'''# YOUTUBE TRENDING VIDEOS  ----------------------------------------------------------------------------
 
 url = "https://yttrendz.com/youtube-trends/singapore"
 response = requests.get(url)
@@ -319,7 +397,7 @@ for title_element in elements:
 
                 
 # Create a DataFrame with title and description
-tiktok_data = pd.DataFrame({"Title": titles_list , "Description": descriptions, "URL": urls, "Date": date})
+tiktok_data = pd.DataFrame({"Title": titles_list , "Description": descriptions, "URL": urls, "Date": date})'''
   
 # UPDATING TO GOOGLE SHEETS ----------------------------------------------------------------------------
 
@@ -349,9 +427,9 @@ def update_sheet(worksheet_title, df, include_header=False):
         wks.update('A1', data)
 
 # Update Google Sheets with the collected data
-update_sheet('YouTube', yt_data, include_header=True)
-update_sheet('Twitter', twitter_data, include_header=True)
-update_sheet('Instagram Reels', instareel_data, include_header=True)
-update_sheet('Google Trends', google_new, include_header=True)
-update_sheet('TikTok Trends', tiktok_data, include_header=True)
-#update_sheet('TikTok Hashtags', tiktok_hashtag, include_header=True)
+#update_sheet('YouTube', yt_data, include_header=True)
+#update_sheet('Twitter', twitter_data, include_header=True)
+#update_sheet('Instagram Reels', instareel_data, include_header=True)
+#update_sheet('Google Trends', google_new, include_header=True)
+#update_sheet('TikTok Trends', tiktok_data, include_header=True)
+update_sheet('TikTok Hashtags', tiktok_hashtag, include_header=True)
