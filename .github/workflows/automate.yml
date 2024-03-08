@@ -29,5 +29,11 @@ jobs:
           git config --global user.email "xinle@vintedge.com"
           git config --global user.name "xinlevintedge"
           git add .
-          git commit -m "Automated data update"
-          git push
+          # Check if there are any changes
+          git diff --staged --quiet || change=1
+          # If changes are present, then commit and push
+          if [[ -n "$change" ]]; then
+            git commit -m "Automated data update"
+            git push
+          else
+            echo "No changes to commit"
