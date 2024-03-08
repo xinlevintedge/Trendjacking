@@ -108,6 +108,9 @@ for element in rankchange_elements:
 
 print(len(ranks))
 print(len(rankchange))
+print(len(hashtags))
+print(len(posts))
+print(len(views))
 # Create DataFrame
 tiktok_hashtag = pd.DataFrame({"Rank": ranks, "Hashtag": hashtags, "Rank Change": rankchange,"Posts": posts,"Views": views})
 tiktok_hashtag['Date'] = previous_date
