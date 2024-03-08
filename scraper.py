@@ -39,10 +39,6 @@ sh = client.open_by_url('https://docs.google.com/spreadsheets/d/1EgrVNuuFs_XxHsk
 # Get the previos date and format it as "YYYY-MM-DD"
 previous_date = (date.today() - timedelta(days=1)).strftime("%Y-%m-%d")
 
-
-# Path to your chromedriver executable
-CHROMEDRIVER_PATH = "C:\\Users\\XINLE\\Downloads\\chromedriver-win64\\chromedriver-win64\\chromedriver.exe"
-
 # URL of the website to scrape
 url = "https://ads.tiktok.com/business/creativecenter/inspiration/popular/hashtag/pc/en"
 
@@ -69,7 +65,12 @@ while True:
         )
     except Exception as e:
         break  # Exit the loop if the button is not found or any error occurs
-    
+
+# After clicking the "View More" button, wait for the page to load completely
+WebDriverWait(driver, 10).until(
+    EC.presence_of_element_located((By.CLASS_NAME, "CardPc_itemValue__XGDmG"))
+)
+
 # Find all the  elements
 rank_elements = driver.find_elements(By.CLASS_NAME, "index-mobile_rankingIndex__9mXja")
 hashtag_elements = driver.find_elements(By.CLASS_NAME, "CardPc_titleText__RYOWo")
