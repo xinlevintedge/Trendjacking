@@ -34,6 +34,7 @@ jobs:
           # If changes are present, then commit and push
           if [[ -n "$change" ]]; then
             git commit -m "Automated data update"
+            git branch --set-upstream-to=origin/master
             git push
           else
             echo "No changes to commit"
