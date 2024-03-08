@@ -39,7 +39,297 @@ sh = client.open_by_url('https://docs.google.com/spreadsheets/d/1EgrVNuuFs_XxHsk
 # Get the previos date and format it as "YYYY-MM-DD"
 previous_date = (date.today() - timedelta(days=1)).strftime("%Y-%m-%d")
 
-# URL of the website to scrape
+# YOUTUBE TRENDING VIDEOS  ----------------------------------------------------------------------------
+
+url = "https://yttrendz.com/youtube-trends/singapore"
+response = requests.get(url)
+soup = BeautifulSoup(response.content, "html.parser")
+
+# Find the elements containing ranks, topics, and YouTuber's names
+rank_elements = soup.select(".feed-count span")
+topic_elements = soup.select(".feed-title .videoPopup-open")
+YouTuber_elements = soup.select(".feed-author")
+view_elements = soup.select("li:nth-child(1) .feed-view-figure")
+like_elements = soup.select("li:nth-child(2) .feed-view-figure")
+comment_elements = soup.select("li~ li+ li .feed-view-figure")
+
+
+# Extract text from elements
+ranks = [rank.get_text(strip=True) for rank in rank_elements]
+topics = [topic.get_text(strip=True) for topic in topic_elements]
+views = [view.get_text(strip=True) for view in view_elements]
+likes = [like.get_text(strip=True) for like in like_elements]
+comments = [comment.get_text(strip=True) for comment in comment_elements]
+
+# Extract authors and remove rows containing "Upload by:"
+YouTuber_list = []
+for YouTuber in YouTuber_elements:
+    YouTuber_text = YouTuber.get_text(strip=True)
+    if "Upload by" not in YouTuber_text:
+        YouTuber_list.append(YouTuber_text)
+ 
+worksheet = sh.worksheet('YouTube')
+old_trends = worksheet.get_all_records()
+rank_change = []
+# Iterate through the old trends data
+for i, new_topic in enumerate(topics):
+    new_YouTuber = YouTuber_list[i]
+    found_match = False  # Flag to track if a match is found
+    
+    # Iterate through the old trends data
+    for old_trend_row in old_trends:
+        old_topic = old_trend_row['Topic']
+        old_YouTuber = old_trend_row['YouTuber']
+        old_rank = old_trend_row['Rank']
+        
+        # Check if the new trend matches any old trend
+        if old_topic == new_topic and old_YouTuber == new_YouTuber:
+            # Calculate rank change
+            rank_change_val = int(old_rank) - int(ranks[i])
+            if rank_change_val > 0:
+                rank_change_str = "+" + str(rank_change_val)
+            else:
+                rank_change_str = str(rank_change_val) if rank_change_val != 0 else '-'
+            rank_change.append(rank_change_str)
+            found_match = True  # Set the flag to True to indicate a match is found
+            break
+        
+    # If no match is found for the new trend in the old trends, label rank change as "NEW"
+    if not found_match:
+        rank_change.append('NEW')
+
+# Combine data into a DataFrame
+yt_data = pd.DataFrame({"Rank": ranks, "Topic": topics, "YouTuber": YouTuber_list, "Views": views,"Likes": likes,"Comments": comments, "Rank Change": rank_change})
+yt_data['Date'] = previous_date
+
+# TWITTER HASHTAGS ----------------------------------------------------------------------------
+
+twitter_url = "https://twitter-trends.iamrohit.in/singapore"
+
+# Send a GET request to the URL
+response = requests.get(twitter_url)
+soup = BeautifulSoup(response.content, "html.parser")
+
+# Find the elements containing Twitter ranks and topics
+rank_elements = soup.select("#copyData th:nth-child(1)")
+topic_elements = soup.select(".tweet")
+tweet_volume_elements = soup.select("#copyData .sml")
+
+# Extract text from elements
+ranks = [rank.get_text(strip=True).replace('.', '') for rank in rank_elements]
+topics = [topic.get_text(strip=True) for topic in topic_elements]
+tweet_volume = [tweet_volume.get_text(strip=True) for tweet_volume in tweet_volume_elements]
+
+# Read data from the Google Sheet into a DataFrame
+worksheet = sh.worksheet('Twitter')
+twitter_sheet_data = worksheet.get_all_values()
+twitter_sheet_df = pd.DataFrame(twitter_sheet_data[1:], columns=twitter_sheet_data[0])  # assuming the first row contains headers
+
+# Initialize lists to store rank change and volume change
+rank_change = []
+volume_change = []
+
+def convert_volume(volume_str):
+    if volume_str == 'Under 10k':
+        return 10
+    elif 'k' in volume_str:
+        return float(volume_str.replace('k', '')) 
+    else:
+        return float(volume_str)
+
+# Iterate through the new trends
+for topic, rank, volume in zip(topics, ranks, tweet_volume):
+    # Remove dots from rank if present and convert to integer
+    rank = int(rank.replace('.', ''))
+    
+    # Convert the new volume string to a numeric value
+    volume_numeric = convert_volume(volume)
+
+    # Check if the topic exists in the old trends
+    if topic in twitter_sheet_df['Hashtags/Topics'].values:
+        old_row = twitter_sheet_df.loc[twitter_sheet_df['Hashtags/Topics'] == topic].iloc[0]
+        old_rank = int(old_row['Rank'].replace('.', ''))
+        old_volume_str = old_row['Tweet Volume']
+        old_volume_numeric = convert_volume(old_volume_str)
+
+        # Calculate rank and volume change
+        rank_change_val = old_rank - rank
+        volume_change_val = volume_numeric - old_volume_numeric
+        volume_change_str = f"{volume_change_val:+.1f}K" if volume_change_val != 0 else "-"
+        
+        # Determine the rank change string based on whether there is an actual change
+        if rank_change_val == 0:
+            rank_change_str = "-"
+        elif rank_change_val > 0:
+            rank_change_str = f"+{rank_change_val}"
+        else:
+            rank_change_str = str(rank_change_val)
+        
+        rank_change.append(rank_change_str)
+        volume_change.append(volume_change_str)
+    else:
+        # If the topic is new and wasn't in the old trends
+        rank_change.append('NEW')
+        volume_change.append('NEW')  
+
+
+# Combine data into a DataFrame with the date column
+twitter_data = pd.DataFrame({"Rank": ranks, "Hashtags/Topics": topics, "Date": [previous_date]*len(ranks), "Tweet Volume": tweet_volume})
+twitter_data['Rank Change'] = rank_change
+twitter_data['Volume Change'] = volume_change
+    
+ # INSTAGRAM REELS ----------------------------------------------------------------------------
+ 
+instareel_url = "https://slayingsocial.com/instagram-reels-trends/  "
+
+# Send a GET request to the URL
+try:
+    response = requests.get(instareel_url)
+    response.raise_for_status()  # Raise an exception for non-200 status codes
+    soup = BeautifulSoup(response.content, "html.parser")
+
+    # Find the elements containing insta reels
+    title_elements = soup.select("p+ p")
+   
+    # Extract text from elements
+    titles = [title.get_text(strip=True) for title in title_elements]
+
+    titles_cleaned = []
+    descriptions = []
+    URLS = []
+    # Process each title
+    for title_element in title_elements:
+        title_text = title_element.get_text(strip=True)
+        if "Example" in title_text:  # Check if title contains the word "Example"
+            segments = title_text.split("|")
+            title_part = segments[0].strip()
+            # Remove "Trend" and "*" from title_part
+            title_part_cleaned = title_part.replace("Trend", "").replace("*", "").strip()
+
+            # Try to find an <a> tag within the title_element
+            a_tag = title_element.find('a')
+            URL = a_tag['href'] if a_tag else None
+
+            titles_cleaned.append(title_part_cleaned)
+            if URL:
+                URLS.append(URL)
+            else:
+                URLS.append("-")
+
+            description_part = ""
+            if len(segments) > 1:
+                description_part = segments[1].strip()
+                description_part = description_part.replace("Example:", "").replace("Posting a", "").replace("Posting an", "").strip()
+            descriptions.append(description_part)
+
+
+    # Create a DataFrame with title and description
+    instareel_data = pd.DataFrame({"Title": titles_cleaned, "Description": descriptions, "URL": URLS})
+    instareel_data['Date'] = previous_date
+    
+except requests.exceptions.RequestException as e:
+    print(f"Failed to retrieve the webpage: {e}")
+    
+    
+# GOOGLE TRENDS ----------------------------------------------------------------------------
+from pytrends.request import TrendReq
+import pandas as pd
+from datetime import date, timedelta
+
+# Set up pytrends
+pytrends = TrendReq(hl='en-US', tz=360)
+
+# Get trending searches
+google_data = pytrends.trending_searches(pn='singapore')
+google_data['Date'] = previous_date
+
+google_data = google_data.rename(columns={google_data.columns[0]: "Trends"})
+
+worksheet = sh.worksheet('Google Trends')
+def process_google_data(google_data, worksheet):
+    # Get all trends from the Google Sheet
+    sheet_trends = worksheet.col_values(1)
+
+    matched_trends = []
+    # Check each trend in google_data
+    for index, row in google_data.iterrows():
+        trend = row['Trends']
+        if trend in sheet_trends:
+            matched_trends.append(trend)
+    
+    if not matched_trends:
+        print("No matching trends found in Google Sheets.")
+        return google_data  # Return the entire google_data DataFrame if no matching trends are found
+    
+    # Find the first matched trend
+    first_matched_trend = matched_trends[0]
+
+    # Split google_data based on the first matched trend
+    split_index = google_data.index[google_data['Trends'] == first_matched_trend][0]
+    google_new = google_data.iloc[:split_index]
+
+    return google_new
+
+# Process the scraped data and get new trends
+google_new = process_google_data(google_data, worksheet)
+
+# TIKTOK TRENDS  ----------------------------------------------------------------------------
+ 
+tiktok_url = "https://slayingsocial.com/tiktok-trends-right-now/"
+
+# Send a GET request to the URL
+response = requests.get(tiktok_url)
+response.raise_for_status()  # Raise an exception for non-200 status codes
+soup = BeautifulSoup(response.content, "html.parser")
+
+# Find the elements containing insta reels
+elements = soup.select("p+ p")
+   
+# Extract text from elements
+titles = [title.get_text(strip=True) for title in elements]
+
+date, titles_list, descriptions, urls = [], [], [], []
+
+# Process each title
+for title_element in elements:
+    title_text = title_element.get_text(strip=True)
+    
+    if "Example" in title_text:
+        # Find an <a> tag within the title_element for the URL
+        a_tag = title_element.find('a')
+        url = a_tag['href'] if a_tag else "-"
+        
+        segments = title_text.split("|")
+        title_part = segments[0].strip()
+        title_part = title_part.replace("Trend", "").replace("*", "").strip()
+
+        title_segments = title_part.split(")")
+
+        if len(title_segments) > 1 and title_segments[1].strip():
+            date_part_raw = title_segments[0].strip("(Added")
+            try:
+                date_object = datetime.datetime.strptime(date_part_raw.strip(), "%B %d, %Y")
+                date_formatted = date_object.strftime("%Y-%m-%d")
+            except ValueError:
+                date_formatted = "-"
+            title_cleaned = title_segments[1].strip()
+
+            date.append(date_formatted)
+            titles_list.append(title_cleaned)
+            urls.append(url)  # Use extracted URL
+
+            description_part = ""
+            if len(segments) > 1:
+                description_part = segments[1].strip()
+                description_part = description_part.replace("Example:", "").replace("Posting a", "").replace("Posting an", "").strip()
+                descriptions.append(description_part)
+
+                
+# Create a DataFrame with title and description
+tiktok_data = pd.DataFrame({"Title": titles_list , "Description": descriptions, "URL": urls, "Date": date})
+  
+# TIKTOK HASHTAGS ----------------------------------------------------------------------------
+'''# URL of the website to scrape
 url = "https://ads.tiktok.com/business/creativecenter/inspiration/popular/hashtag/pc/en"
 
 # Set up Chrome webdriver 
@@ -107,7 +397,7 @@ for element in rankchange_elements:
 # Create DataFrame
 tiktok_hashtag = pd.DataFrame({"Rank": ranks, "Hashtag": hashtags, "Rank Change": rankchange})
 tiktok_hashtag['Date'] = previous_date
-driver.quit()
+driver.quit()'''
 
 
 # UPDATING TO GOOGLE SHEETS ----------------------------------------------------------------------------
@@ -138,9 +428,9 @@ def update_sheet(worksheet_title, df, include_header=False):
         wks.update('A1', data)
 
 # Update Google Sheets with the collected data
-#update_sheet('YouTube', yt_data, include_header=True)
-#update_sheet('Twitter', twitter_data, include_header=True)
-#update_sheet('Instagram Reels', instareel_data, include_header=True)
-#update_sheet('Google Trends', google_new, include_header=True)
-#update_sheet('TikTok Trends', tiktok_data, include_header=True)
-update_sheet('TikTok Hashtags', tiktok_hashtag, include_header=True)
+update_sheet('YouTube', yt_data, include_header=True)
+update_sheet('Twitter', twitter_data, include_header=True)
+update_sheet('Instagram Reels', instareel_data, include_header=True)
+update_sheet('Google Trends', google_new, include_header=True)
+update_sheet('TikTok Trends', tiktok_data, include_header=True)
+#update_sheet('TikTok Hashtags', tiktok_hashtag, include_header=True)
