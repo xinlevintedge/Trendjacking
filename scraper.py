@@ -104,11 +104,6 @@ for element in rankchange_elements:
     except Exception as e:
         rankchange.append("-")
 
-print(len(ranks))
-print(len(rankchange))
-print(len(hashtags))
-print(len(posts))
-print(len(views))
 # Create DataFrame
 tiktok_hashtag = pd.DataFrame({"Rank": ranks, "Hashtag": hashtags, "Rank Change": rankchange})
 tiktok_hashtag['Date'] = previous_date
