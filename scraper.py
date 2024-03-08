@@ -83,6 +83,8 @@ postsviews = [postview.text.strip() for postview in postview_elements]
 posts = postsviews[0::2]  # Get every other element, starting from the first
 views = postsviews[1::2]  # Get every other element, starting from the second
 
+print(posts)
+print(ranks)
 
 rankchange = []
 # Loop through each element to check its content
