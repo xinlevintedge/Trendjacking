@@ -66,11 +66,6 @@ while True:
     except Exception as e:
         break  # Exit the loop if the button is not found or any error occurs
 
-# After clicking the "View More" button, wait for the page to load completely
-WebDriverWait(driver, 10).until(
-    EC.presence_of_element_located((By.CLASS_NAME, "CardPc_itemValue__XGDmG"))
-)
-
 # Find all the  elements
 rank_elements = driver.find_elements(By.CLASS_NAME, "index-mobile_rankingIndex__9mXja")
 hashtag_elements = driver.find_elements(By.CLASS_NAME, "CardPc_titleText__RYOWo")
@@ -115,7 +110,7 @@ print(len(hashtags))
 print(len(posts))
 print(len(views))
 # Create DataFrame
-tiktok_hashtag = pd.DataFrame({"Rank": ranks, "Hashtag": hashtags, "Rank Change": rankchange,"Posts": posts,"Views": views})
+tiktok_hashtag = pd.DataFrame({"Rank": ranks, "Hashtag": hashtags, "Rank Change": rankchange})
 tiktok_hashtag['Date'] = previous_date
 driver.quit()
 
