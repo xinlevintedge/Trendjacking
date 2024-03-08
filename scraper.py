@@ -10,6 +10,13 @@ import re
 import datetime
 from datetime import date, timedelta
 
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.chrome.options import Options
+
 secret_value = r"""
 {
   "type": "service_account",
@@ -32,12 +39,6 @@ sh = client.open_by_url('https://docs.google.com/spreadsheets/d/1EgrVNuuFs_XxHsk
 # Get the previos date and format it as "YYYY-MM-DD"
 previous_date = (date.today() - timedelta(days=1)).strftime("%Y-%m-%d")
 
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.chrome.options import Options
 
 # Path to your chromedriver executable
 CHROMEDRIVER_PATH = "C:\\Users\\XINLE\\Downloads\\chromedriver-win64\\chromedriver-win64\\chromedriver.exe"
@@ -105,6 +106,8 @@ for element in rankchange_elements:
     except Exception as e:
         rankchange.append("-")
 
+print(len(ranks))
+print(len(rankchange))
 # Create DataFrame
 tiktok_hashtag = pd.DataFrame({"Rank": ranks, "Hashtag": hashtags, "Rank Change": rankchange,"Posts": posts,"Views": views})
 tiktok_hashtag['Date'] = previous_date
